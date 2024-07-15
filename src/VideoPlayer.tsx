@@ -48,8 +48,10 @@ const VideoRecorder = ({
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const chunksRef = useRef<Blob[]>([]);
   const timer = useRef<number>(0);
+  const recorderTime = useRef<number>(0);
 
   async function startStream() {
+    console.log("startStream");
     const stream = await navigator.mediaDevices.getUserMedia({
       video: { width: 654, height: 432 },
       audio: true,
@@ -94,14 +96,19 @@ const VideoRecorder = ({
   }
 
   const startRecording = async () => {
+    console.log("startRecording");
     chunksRef.current = [];
-
+    if (videoRef.current) {
+      videoRef.current.muted = true;
+    }
     await startStream();
 
     setRecordingState("started");
   };
 
   const stopRecording = () => {
+    console.log("stopRecording");
+    recorderTime.current = videoDuration;
     if (mediaRecorderRef.current) {
       const blob = new Blob(chunksRef.current, { type: "video/webm" });
       const url = URL.createObjectURL(blob);
@@ -124,16 +131,19 @@ const VideoRecorder = ({
   };
 
   const pauseRecording = () => {
+    console.log("pauseRecording");
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.pause();
       if (videoRef.current) {
         videoRef.current.pause();
       }
+      clearInterval(timer.current);
       setRecordingState("paused");
     }
   };
 
   const resumeRecording = () => {
+    console.log("resumeRecording");
     if (mediaRecorderRef.current) {
       mediaRecorderRef.current.resume();
       if (videoRef.current) {
@@ -144,6 +154,8 @@ const VideoRecorder = ({
   };
 
   function cleanRecording() {
+    console.log("cleanRecording");
+    clearInterval(timer.current);
     setVideoDuration(0);
     setRecordingState("init");
     if (mediaRecorderRef.current) {
@@ -161,15 +173,32 @@ const VideoRecorder = ({
   }
 
   const playRecording = () => {
+    console.log("playRecording");
     if (videoRef.current) {
       videoRef.current.play();
+      videoRef.current.muted = false;
+      timer.current = setInterval(() => {
+        setVideoDuration((val) => val - 1);
+      }, 1000);
 
       setRecordingState("playing");
     }
   };
 
+  const pausePlaying = () => {
+    console.log("pausePlaying");
+    if (videoRef.current) {
+      videoRef.current.pause();
+      clearInterval(timer.current);
+      setRecordingState("stopped");
+    }
+  };
+
   function videoOnEnd() {
+    console.log("videoOnEnd");
     setRecordingState("stopped");
+    clearInterval(timer.current);
+    setVideoDuration(recorderTime.current);
   }
 
   // function videoOnUpdate() {
@@ -215,12 +244,7 @@ const VideoRecorder = ({
             start: startRecording,
             stop: stopRecording,
             play: videoRef.current ? playRecording : () => {},
-            pausePlaying: () => {
-              if (videoRef.current) {
-                videoRef.current.pause();
-                setRecordingState("stopped");
-              }
-            },
+            pausePlaying: pausePlaying,
             clean: cleanRecording,
           }}
         />
@@ -301,7 +325,7 @@ function VideoControls({
               backgroundColor: "elevation.surface",
               borderRadius: "border.radius.100",
               padding: "space.050",
-              height: "32px",
+              height: "36px",
               color: "color.text.subtle",
               fontFamily: "SF Pro",
               fontSize: "12px",
@@ -335,7 +359,7 @@ function VideoControls({
               backgroundColor: "elevation.surface",
               borderRadius: "border.radius.100",
               padding: "space.050",
-              height: "32px",
+              height: "36px",
               color: "color.text.subtle",
               fontFamily: "SF Pro",
               fontSize: "12px",

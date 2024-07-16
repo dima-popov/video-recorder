@@ -67,7 +67,7 @@ const VideoRecorder = ({
       videoRef.current.play();
     }
     mediaRecorderRef.current = new MediaRecorder(stream, {
-      mimeType: "video/mp4",
+      mimeType: "video/webm",
     });
 
     mediaRecorderRef.current.ondataavailable = (event) => {
@@ -112,7 +112,7 @@ const VideoRecorder = ({
     console.log("stopRecording");
     recorderTime.current = videoDuration;
     if (mediaRecorderRef.current) {
-      const blob = new Blob(chunksRef.current, { type: "video/mp4" });
+      const blob = new Blob(chunksRef.current, { type: "video/webm" });
       const url = URL.createObjectURL(blob);
       setVideoURL(url);
       setVideoBlob(blob);

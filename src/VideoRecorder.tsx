@@ -39,15 +39,17 @@ const StopButtonWrapper = styled.div`
 
 const VideoRecorder = ({
   setVideoURL,
+  setVideoBlob,
 }: {
   setVideoURL: (arg: string) => void;
+  setVideoBlob: (arg: Blob | null) => void;
 }) => {
   const [recordingState, setRecordingState] = useState("init");
   const [videoDuration, setVideoDuration] = useState(0);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const chunksRef = useRef<Blob[]>([]);
-  const timer = useRef<number>(0);
+  const timer = useRef<any>(null);
   const recorderTime = useRef<number>(0);
 
   async function startStream() {
@@ -65,7 +67,7 @@ const VideoRecorder = ({
       videoRef.current.play();
     }
     mediaRecorderRef.current = new MediaRecorder(stream, {
-      mimeType: "video/webm",
+      mimeType: "video/mp4",
     });
 
     mediaRecorderRef.current.ondataavailable = (event) => {
@@ -110,9 +112,10 @@ const VideoRecorder = ({
     console.log("stopRecording");
     recorderTime.current = videoDuration;
     if (mediaRecorderRef.current) {
-      const blob = new Blob(chunksRef.current, { type: "video/webm" });
+      const blob = new Blob(chunksRef.current, { type: "video/mp4" });
       const url = URL.createObjectURL(blob);
       setVideoURL(url);
+      setVideoBlob(blob);
       if (videoRef.current) {
         if (videoRef.current.srcObject) {
           const stream = videoRef.current.srcObject as MediaStream;
@@ -162,6 +165,7 @@ const VideoRecorder = ({
       mediaRecorderRef.current.stop();
 
       setVideoURL("");
+      setVideoBlob(null);
       if (videoRef.current) {
         videoRef.current.srcObject = null;
         videoRef.current.pause();
